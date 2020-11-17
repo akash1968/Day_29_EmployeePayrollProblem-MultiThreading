@@ -8,7 +8,7 @@ using System;
 
 namespace EmployeePayrollProblem_MultiThreading
 {
-    class Program
+   public class Program
     {
         static void Main(string[] args)
         {
