@@ -16,6 +16,11 @@ namespace EmployeePayrollProblem_MultiThreading
 {
     public class EmployeePayrollOperation
     {
+        // Adding NLog Class to feed the log details for proper monitoring
+        NLog nLog = new NLog();
+        /// Mutex is a synchronization primitive to implement interthread execution synchronization
+        /// Which means a thread can be locked i.e. Untill the thread completes it's execution new thread will not be permitted the entry
+        private static Mutex threadMute = new Mutex();
         /// Ensuring the established connection using the Sql Connection specifying the property.
         public static SqlConnection connection { get; set; }
         /// <summary>
@@ -27,9 +32,11 @@ namespace EmployeePayrollProblem_MultiThreading
         {
             foreach (var employee in employeeList)
             {
+                nLog.LogDebug("Adding the Employee: " + employee.EmployeeName + "via ThreadID: " + Thread.CurrentThread.ManagedThreadId);
                 Console.WriteLine("Employeee being added :", employee.EmployeeName);
                 bool flag = AddEmployeeToDataBase(employee);
                 Console.WriteLine("Employee Added :", employee.EmployeeName);
+                nLog.LogInfo("Employee Successfully added in Database via ThreadId: " + Thread.CurrentThread.ManagedThreadId);
                 if (flag == false)
                     return false;
             }
@@ -39,11 +46,12 @@ namespace EmployeePayrollProblem_MultiThreading
         /// UC2 Adding the multiple employees record to data base with random threads allocation from task thread pool.
         /// </summary>
         /// <param name="employeeList"></param>
-        public void AddEmployeeListToEmployeePayrollDataBaseWithThread(List<EmployeeModel> employeelList)
+        public void AddEmployeeListToEmployeePayrollDataBaseWithThread(List<EmployeeModel> employeeList)
         {
             ///For each employeeData present in list new thread is created and all threads run according to the time slot assigned by the thread scheduler.
-            employeelList.ForEach(employeeData =>
+            employeeList.ForEach(employeeData =>
             {
+                nLog.LogDebug("Adding the Employee: " + employeeData.EmployeeName + "via ThreadID: " + Thread.CurrentThread.ManagedThreadId);
                 Task thread = new Task(() =>
                 {
                     Console.WriteLine("Employee Being added" + employeeData.EmployeeName);
@@ -53,6 +61,7 @@ namespace EmployeePayrollProblem_MultiThreading
                     this.AddEmployeeToDataBase(employeeData);
                     /// Indicating mesasage to end of data addition
                     Console.WriteLine("Employee added:" + employeeData.EmployeeName);
+                    nLog.LogInfo("Employee Successfully added in Database via ThreadId: " + Thread.CurrentThread.ManagedThreadId);
                 });
                 thread.Start();
             });
@@ -66,18 +75,21 @@ namespace EmployeePayrollProblem_MultiThreading
             ///For each employeeData present in list new thread is created and all threads run according to the time slot assigned by the thread scheduler.
             employeeList.ForEach(employeeData =>
             {
+                nLog.LogDebug("Adding the Employee: " + employeeData.EmployeeName + "via ThreadID: " + Thread.CurrentThread.ManagedThreadId);
                 Task thread = new Task(() =>
                 {
                     //Lock the set of codes for the current employeeData
                     lock (employeeData)
-                    {                        
-                        Console.WriteLine("Employee Being added" + employeeData.EmployeeName);
+                    {
+                         Console.WriteLine("Employee Being added" + employeeData.EmployeeName);
                         /// Printing the current thread id being utilised
                         Console.WriteLine("Current thread id: " + Thread.CurrentThread.ManagedThreadId);
                         /// Calling the method to add the data to the address book database
                         this.AddEmployeeToDataBase(employeeData);
                         /// Indicating mesasage to end of data addition
-                        Console.WriteLine("Employee added:" + employeeData.EmployeeName);                        
+                        Console.WriteLine("Employee added:" + employeeData.EmployeeName);
+                        nLog.LogInfo("Employee Successfully added in Database via ThreadId: " + Thread.CurrentThread.ManagedThreadId);
+                        
                     }
 
                 });
