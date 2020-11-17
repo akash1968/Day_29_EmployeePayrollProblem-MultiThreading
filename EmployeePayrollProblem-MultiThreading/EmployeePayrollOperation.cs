@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace EmployeePayrollProblem_MultiThreading
 {
@@ -32,6 +34,28 @@ namespace EmployeePayrollProblem_MultiThreading
                     return false;
             }
             return true;
+        }
+        /// <summary>
+        /// UC2 Adding the multiple employees record to data base with random threads allocation from task thread pool.
+        /// </summary>
+        /// <param name="employeeList"></param>
+        public void AddEmployeeListToEmployeePayrollDataBaseWithThread(List<EmployeeModel> employeelList)
+        {
+            ///For each employeeData present in list new thread is created and all threads run according to the time slot assigned by the thread scheduler.
+            employeelList.ForEach(employeeData =>
+            {
+                Task thread = new Task(() =>
+                {
+                    Console.WriteLine("Employee Being added" + employeeData.EmployeeName);
+                    /// Printing the current thread id being utilised
+                    Console.WriteLine("Current thread id: " + Thread.CurrentThread.ManagedThreadId);
+                    /// Calling the method to add the data to the address book database
+                    this.AddEmployeeToDataBase(employeeData);
+                    /// Indicating mesasage to end of data addition
+                    Console.WriteLine("Employee added:" + employeeData.EmployeeName);
+                });
+                thread.Start();
+            });
         }
         /// <summary>
         /// Adding Employee To Database
